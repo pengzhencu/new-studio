@@ -1,0 +1,45 @@
+DSEG     SEGMENT
+  SCORE DB  11H,02H,15H,32H,5H,6H,7H,8H,9H,10H,90 DUP(05H)    
+       MAX      DB  ?
+       MIN       DB  ?
+DSEG     ENDS
+CSEG      SEGMENT
+       ASSUME       DS:DSEG,CS:CSEG
+START:   MOV      AX,DSEG
+       MOV     DS,AX
+;————————————————到这，上面的均是模板
+       LEA       BX,SCORE     ;取数组的首地址
+       MOV      CX,100   ;控制循环次数
+       XOR           SI,SI       ;将SI清零
+       XOR              DI,DI      ;将DI清零
+L1:  MOV      AH,[BX+SI]    ;用基变址寻址取操作数， L1为外循环，(SI)为循环变量，
+                     ;相当于i
+ 
+L2:  MOV      AL,[BX+DI]    ; L2为内循环，(DI)为循环变量，相当于j
+      
+       CMP      AH,AL
+       JAE         L3         
+       MOV      DH,AH          ;AH<Al，交换两个数
+       MOV      AH,AL          
+       MOV      AL,DH
+       MOV      [BX+DI],AL    ;将交换后的数存入存储器
+       MOV      [BX+SI],AH    ;这两步很重要
+L3:  INC        DI           ;AH>=AL，不需交换，(AH)直接和后一个数比较，相当于j++
+       CMP      DI,100    ;判断内层循环是否结束
+       JB    L2                 ;没结束，继续循环
+ 
+       ;内层循环结束了
+       INC        SI           ;外层变量SI加一，相当于i++
+       MOV      DI,SI       ;相当于j=i
+       LOOP     L1
+ 
+;通过寄存器实现两个存储器数据间的交换
+       MOV      AH,BYTE PTR[BX]              ;基址寻址
+       MOV      AL,BYTE PTR[BX+99]
+       MOV      MAX,AH
+       MOV      MIN,AL
+       MOV      AH,4CH         ;返回操作系统
+       INT         21H
+CSEG      ENDS
+END      START
+ 
